@@ -1,0 +1,10 @@
+{{ xray_logfile }} {
+  daily
+  rotate 7
+  compress
+  delaycompress
+  create 644 root root
+  postrotate
+    systemctl kill -s HUP rsyslog.service
+  endscript
+}

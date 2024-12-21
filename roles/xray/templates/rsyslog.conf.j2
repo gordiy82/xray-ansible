@@ -1,0 +1,6 @@
+$template NTFormat,"%msg:2:$%\n"
+
+if $programname == 'xray' then {
+    {{ xray_logfile }};NTFormat
+    stop
+}

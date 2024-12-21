@@ -1,0 +1,9 @@
+---
+- name: Install logrotate
+  become: true
+  become_user: root
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name:
+      - logrotate
+    state: present

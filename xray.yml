@@ -1,0 +1,5 @@
+---
+- name: Configure Xray
+  hosts: all
+  roles:
+    - xray
