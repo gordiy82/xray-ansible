@@ -1,0 +1,9 @@
+---
+- name: Install rsyslog
+  become: true
+  become_user: root
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name:
+      - rsyslog
+    state: present

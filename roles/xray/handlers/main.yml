@@ -1,0 +1,16 @@
+---
+- name: Restart rsyslog
+  become: true
+  become_user: root
+  become_method: ansible.builtin.sudo
+  ansible.builtin.service:
+    name: rsyslog
+    state: restarted
+
+- name: Restart logrotate
+  become: true
+  become_user: root
+  become_method: ansible.builtin.sudo
+  ansible.builtin.service:
+    name: logrotate
+    state: restarted

@@ -1,0 +1,134 @@
+---
+- name: Configure Xray
+  become: true
+  become_user: root
+  become_method: ansible.builtin.sudo
+  block:
+
+    - name: Create /etc/xray
+      ansible.builtin.file:
+        path: /etc/xray
+        state: directory
+        mode: "0755"
+        owner: root
+        group: root
+
+    - name: Create Xray dockerfile
+      ansible.builtin.template:
+        src: Dockerfile.j2
+        dest: /etc/xray/Dockerfile
+        mode: '0644'
+        owner: root
+        group: root
+
+    - name: Build docker image xray:{{ xray_version }}
+      community.docker.docker_image:
+        build:
+          path: /etc/xray
+        name: xray
+        tag: "{{ xray_version }}"
+        source: build
+        timeout: 300
+
+    - name: Generate uuid
+      ansible.builtin.command:
+        cmd: "docker run xray:{{ xray_version }} uuid"
+      register: xray_uuid
+      changed_when: false
+
+    - name: Generate shord id
+      ansible.builtin.command:
+        cmd: "openssl rand -hex 8"
+      register: xray_short_id
+      changed_when: false
+
+    - name: Generate password
+      ansible.builtin.command:
+        cmd: "openssl rand -base64 16"
+      register: xray_password
+      changed_when: false
+
+    - name: Generate keys
+      ansible.builtin.command:
+        cmd: "docker run xray:{{ xray_version }} x25519"
+      register: xray_keys
+      changed_when: false
+
+    - name: Create logfile
+      ansible.builtin.file:
+        path: "{{ xray_logfile }}"
+        state: touch
+        access_time: preserve
+        modification_time: preserve
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Create config
+      ansible.builtin.template:
+        src: config.json.j2
+        dest: /etc/xray/config.json
+        mode: '0600'
+        owner: root
+        group: root
+      vars:
+        uuid: "{{ xray_uuid.stdout }}"
+        short_id: "{{ xray_short_id.stdout }}"
+        password: "{{ xray_password.stdout }}"
+        private_key: "{{ xray_keys.stdout.split('\n')[0].split(': ')[1] }}"
+      register: config_file
+
+    - name: Create rsyslog config
+      notify: "Restart rsyslog"
+      ansible.builtin.template:
+        src: rsyslog.conf.j2
+        dest: "/etc/rsyslog.d/xray.conf"
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Create logrotate config
+      notify: "Restart logrotate"
+      ansible.builtin.template:
+        src: logrotate.conf.j2
+        dest: "/etc/logrotate.d/xray.conf"
+        mode: "0644"
+        owner: root
+        group: root
+
+    - name: Run docker image xray:{{ xray_version }}
+      community.docker.docker_container:
+        name: xray
+        image: "xray:{{ xray_version }}"
+        command: run --config /etc/xray/config.json
+        restart_policy: always
+        recreate: false
+        ports:
+          - "0.0.0.0:443:443"
+        log_driver: syslog
+        log_options:
+          tag: xray
+        volumes:
+          - /etc/xray/config.json:/etc/xray/config.json
+        env:
+          _CONFIG_CHECKSUM: "{{ config_file.checksum | default('') }}"
+        comparisons:
+          '*': strict
+
+    - name: Create client QR-code (txt)
+      ansible.builtin.template:
+        src: qr_code.txt.j2
+        dest: /etc/xray/qr_code.txt
+        mode: '0600'
+        owner: root
+        group: root
+      vars:
+        uuid: "{{ xray_uuid.stdout }}"
+        short_id: "{{ xray_short_id.stdout }}"
+        public_key: "{{ xray_keys.stdout.split('\n')[1].split(': ')[1] }}"
+
+    - name: Create client QR-code (png)
+      ansible.builtin.command:
+        cmd: "qrencode -o /etc/xray/qr_code.png -t PNG -r /etc/xray/qr_code.txt"
+      register: xray_keys
+      changed_when: false

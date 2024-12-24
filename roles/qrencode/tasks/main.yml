@@ -1,0 +1,9 @@
+---
+- name: Install qrencode
+  become: true
+  become_user: root
+  become_method: ansible.builtin.sudo
+  ansible.builtin.package:
+    name:
+      - qrencode
+    state: present
