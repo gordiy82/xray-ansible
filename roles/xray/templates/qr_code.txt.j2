@@ -1,1 +1,1 @@
-vless://{{ uuid }}@{{ inventory_hostname }}:443?security=reality&encryption=none&pbk={{ public_key }}&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni={{ server_name }}&sid={{ short_id }}#{{ inventory_hostname }}
+vless://{{ xray_uuid }}@{{ inventory_hostname }}:443?security=reality&encryption=none&pbk={{ xray_public_key }}&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni={{ vless_reality_server_name }}&sid={{ xray_short_id }}#{{ inventory_hostname }}

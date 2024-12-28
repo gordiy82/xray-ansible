@@ -1,0 +1,40 @@
+---
+- name: Configure uuid
+  block:
+
+    - name: Check /etc/xray/uuid
+      ansible.builtin.stat:
+        path: /etc/xray/uuid
+      register: xray_uuid_stat
+
+    - name: Generate uuid
+      ansible.builtin.command:
+        cmd: "docker run {{ xray_image }} uuid"
+      register: xray_generate_uuid
+      changed_when: false
+      when: not xray_uuid_stat.stat.exists
+
+    - name: Write uuid to /etc/xray/uuid
+      ansible.builtin.copy:
+        content: "{{ xray_generate_uuid.stdout }}"
+        dest: /etc/xray/uuid
+        mode: "0600"
+        owner: root
+        group: root
+      when: not xray_uuid_stat.stat.exists
+
+    - name: Set fact xray_uuid fact (new uuid)
+      ansible.builtin.set_fact:
+        xray_uuid: "{{ xray_generate_uuid.stdout }}"
+      when: not xray_uuid_stat.stat.exists
+
+    - name: Read /etx/xray/uuid
+      ansible.builtin.slurp:
+        src: /etc/xray/uuid
+      register: xray_read_uuid
+      when: xray_uuid_stat.stat.exists
+
+    - name: Set fact xray_uuid fact  (uuid from file)
+      ansible.builtin.set_fact:
+        xray_uuid: "{{ xray_read_uuid['content'] | b64decode }}"
+      when: xray_uuid_stat.stat.exists

@@ -1,0 +1,26 @@
+---
+- name: Build handmade image
+  block:
+
+    - name: Create handmade dockerfile
+      ansible.builtin.template:
+        src: Dockerfile.handmade.j2
+        dest: /etc/xray/Dockerfile
+        mode: '0644'
+        owner: root
+        group: root
+      vars:
+        go_version: 1.23.4
+
+    - name: Build handmade image {{ xray_version }}}
+      community.docker.docker_image:
+        build:
+          path: /etc/xray
+        name: "{{ xray_handmade_image }}"
+        tag: "{{ xray_version }}"
+        source: build
+        timeout: 300
+
+    - name: Set xray_image fact (used handmade image)
+      ansible.builtin.set_fact:
+        xray_image: "{{ xray_handmade_image }}:{{ xray_version }}"

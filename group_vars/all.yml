@@ -1,5 +1,8 @@
 ---
-xray_version: v24.11.30
+xray_version: 24.12.18    # Available versions: https://github.com/XTLS/Xray-core/releases
+xray_official_image: "ghcr.io/xtls/xray-core"
+xray_handmade_image: "xray-core"
+use_xray_handmade_image: false
+
+vless_reality_server_name: www.apple.com
 xray_logfile: /var/log/xray.log
-go_version: 1.23.4
-server_name: www.apple.com

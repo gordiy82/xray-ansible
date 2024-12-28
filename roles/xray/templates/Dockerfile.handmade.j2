@@ -8,13 +8,13 @@ WORKDIR /root/go/bin
 RUN ./go{{ go_version }} download
 
 WORKDIR /src
-RUN git clone --branch {{ xray_version }} https://github.com/XTLS/Xray-core.git
+RUN git clone --branch v{{ xray_version }} https://github.com/XTLS/Xray-core.git
 
 WORKDIR /src/Xray-core
 RUN CGO_ENABLED=0 /root/go/bin/go{{ go_version }} build -o xray -trimpath -ldflags "-s -w -buildid=" ./main
 
 FROM debian:bookworm
 
-COPY --from=0 /src/Xray-core/xray /usr/local/bin/xray
+COPY --from=0 /src/Xray-core/xray /usr/bin/xray
 RUN useradd -ms /bin/bash xray
-ENTRYPOINT [ "/usr/local/bin/xray" ]
+ENTRYPOINT [ "/usr/bin/xray" ]
