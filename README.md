@@ -1,5 +1,7 @@
 # Xray
 
+```173.39.70.213``` - fake server for examples
+
 ## 1. Configure server with ansible
 
 Run [xray](https://github.com/XTLS/Xray-core) in docker on the server:

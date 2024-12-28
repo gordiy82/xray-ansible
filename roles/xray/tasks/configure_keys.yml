@@ -1,0 +1,44 @@
+---
+- name: Configure keys
+  block:
+
+    - name: Check /etc/xray/keys
+      ansible.builtin.stat:
+        path: /etc/xray/keys
+      register: xray_keys_stat
+
+    - name: Generate keys
+      ansible.builtin.command:
+        cmd: "docker run {{ xray_image }} x25519"
+      register: xray_generate_keys
+      changed_when: false
+      when: not xray_keys_stat.stat.exists
+
+    - name: Write uuid to /etc/xray/keys
+      ansible.builtin.copy:
+        content: "{{ xray_generate_keys.stdout }}"
+        dest: /etc/xray/keys
+        mode: "0600"
+        owner: root
+        group: root
+      when: not xray_keys_stat.stat.exists
+
+    - name: Set fact xray_private_key and xray_public_key facts (new keys)
+      ansible.builtin.set_fact:
+        xray_private_key: "{{ xray_generate_keys.stdout.split('\n')[0].split(': ')[1] }}"
+        xray_public_key: "{{ xray_generate_keys.stdout.split('\n')[1].split(': ')[1] }}"
+      when: not xray_keys_stat.stat.exists
+
+    - name: Read /etx/xray/keys
+      ansible.builtin.slurp:
+        src: /etc/xray/keys
+      register: xray_read_keys
+      when: xray_keys_stat.stat.exists
+
+    - name: Set fact xray_private_key and xray_public_key facts (keys from file)
+      ansible.builtin.set_fact:
+        xray_private_key: "{{ xray_existing_keys.split('\n')[0].split(': ')[1] }}"
+        xray_public_key: "{{ xray_existing_keys.split('\n')[1].split(': ')[1] }}"
+      vars:
+        xray_existing_keys: "{{ xray_read_keys['content'] | b64decode }}"
+      when: xray_keys_stat.stat.exists

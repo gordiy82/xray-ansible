@@ -1,0 +1,40 @@
+---
+- name: Configure short id
+  block:
+
+    - name: Check /etc/xray/short_id
+      ansible.builtin.stat:
+        path: /etc/xray/short_id
+      register: xray_id_stat_stat
+
+    - name: Generate short_id
+      ansible.builtin.command:
+        cmd: "openssl rand -hex 8"
+      register: xray_generate_short_id
+      changed_when: false
+      when: not xray_id_stat_stat.stat.exists
+
+    - name: Write short_id to /etc/xray/short_id
+      ansible.builtin.copy:
+        content: "{{ xray_generate_short_id.stdout }}"
+        dest: /etc/xray/short_id
+        mode: "0600"
+        owner: root
+        group: root
+      when: not xray_id_stat_stat.stat.exists
+
+    - name: Set fact xray_short_id fact (new id)
+      ansible.builtin.set_fact:
+        xray_short_id: "{{ xray_generate_short_id.stdout }}"
+      when: not xray_id_stat_stat.stat.exists
+
+    - name: Read /etx/xray/short_id
+      ansible.builtin.slurp:
+        src: /etc/xray/short_id
+      register: xray_read_short_id
+      when: xray_id_stat_stat.stat.exists
+
+    - name: Set fact xray_short_id fact  (id from file)
+      ansible.builtin.set_fact:
+        xray_short_id: "{{ xray_read_short_id['content'] | b64decode }}"
+      when: xray_id_stat_stat.stat.exists

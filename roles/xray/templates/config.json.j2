@@ -13,7 +13,7 @@
          "protocol":"shadowsocks",
          "settings":{
             "method":"2022-blake3-aes-128-gcm",
-            "password":"{{ password }}",
+            "password":"{{ xray_password }}",
             "network":"tcp,udp"
          }
       },
@@ -24,7 +24,7 @@
          "settings":{
             "clients":[
                {
-                  "id":"{{ uuid }}",
+                  "id":"{{ xray_uuid }}",
                   "email":"user@server",
                   "flow":"xtls-rprx-vision"
                }
@@ -36,17 +36,17 @@
             "security":"reality",
             "realitySettings":{
                "show":false,
-               "dest":"{{ server_name }}:443",
+               "dest":"{{ vless_reality_server_name }}:443",
                "xver":0,
                "serverNames":[
-                  "{{ server_name }}"
+                  "{{ vless_reality_server_name }}"
                ],
-               "privateKey":"{{ private_key }}",
+               "privateKey":"{{ xray_private_key }}",
                "minClientVer":"",
                "maxClientVer":"",
                "maxTimeDiff":0,
                "shortIds":[
-                  "{{ short_id }}"
+                  "{{ xray_short_id }}"
                ]
             }
          },

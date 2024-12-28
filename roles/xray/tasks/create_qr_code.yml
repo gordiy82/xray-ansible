@@ -1,0 +1,19 @@
+---
+- name: Create qr code
+  become: true
+  become_user: root
+  become_method: ansible.builtin.sudo
+  block:
+
+    - name: Create QR code (txt)
+      ansible.builtin.template:
+        src: qr_code.txt.j2
+        dest: /etc/xray/qr_code.txt
+        mode: '0600'
+        owner: root
+        group: root
+
+    - name: Create client QR-code (png)
+      ansible.builtin.command:
+        cmd: "qrencode -o /etc/xray/qr_code.png -t PNG -r /etc/xray/qr_code.txt"
+      changed_when: false
